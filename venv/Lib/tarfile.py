@@ -420,8 +420,6 @@ class _Stream:
         self.__write(b"\037\213\010\010" + timestamp + b"\002\377")
         if self.name.endswith(".gz"):
             self.name = self.name[:-3]
-        # Honor "directory components removed" from RFC1952
-        self.name = os.path.basename(self.name)
         # RFC1952 says we must use ISO-8859-1 for the FNAME field.
         self.__write(self.name.encode("iso-8859-1", "replace") + NUL)
 
@@ -1243,8 +1241,6 @@ class TarInfo(object):
 
             length, keyword = match.groups()
             length = int(length)
-            if length == 0:
-                raise InvalidHeaderError("invalid header")
             value = buf[match.end(2) + 1:match.start(1) + length - 1]
 
             # Normally, we could just use "utf-8" as the encoding and "strict"
@@ -1659,12 +1655,13 @@ class TarFile(object):
             raise ValueError("mode must be 'r', 'w' or 'x'")
 
         try:
-            from gzip import GzipFile
-        except ImportError:
+            import gzip
+            gzip.GzipFile
+        except (ImportError, AttributeError):
             raise CompressionError("gzip module is not available")
 
         try:
-            fileobj = GzipFile(name, mode + "b", compresslevel, fileobj)
+            fileobj = gzip.GzipFile(name, mode + "b", compresslevel, fileobj)
         except OSError:
             if fileobj is not None and mode == 'r':
                 raise ReadError("not a gzip file")
@@ -1692,11 +1689,12 @@ class TarFile(object):
             raise ValueError("mode must be 'r', 'w' or 'x'")
 
         try:
-            from bz2 import BZ2File
+            import bz2
         except ImportError:
             raise CompressionError("bz2 module is not available")
 
-        fileobj = BZ2File(fileobj or name, mode, compresslevel=compresslevel)
+        fileobj = bz2.BZ2File(fileobj or name, mode,
+                              compresslevel=compresslevel)
 
         try:
             t = cls.taropen(name, mode, fileobj, **kwargs)
@@ -1720,15 +1718,15 @@ class TarFile(object):
             raise ValueError("mode must be 'r', 'w' or 'x'")
 
         try:
-            from lzma import LZMAFile, LZMAError
+            import lzma
         except ImportError:
             raise CompressionError("lzma module is not available")
 
-        fileobj = LZMAFile(fileobj or name, mode, preset=preset)
+        fileobj = lzma.LZMAFile(fileobj or name, mode, preset=preset)
 
         try:
             t = cls.taropen(name, mode, fileobj, **kwargs)
-        except (LZMAError, EOFError):
+        except (lzma.LZMAError, EOFError):
             fileobj.close()
             if mode == 'r':
                 raise ReadError("not an lzma file")
@@ -2228,9 +2226,6 @@ class TarFile(object):
         try:
             # For systems that support symbolic and hard links.
             if tarinfo.issym():
-                if os.path.lexists(targetpath):
-                    # Avoid FileExistsError on following os.symlink.
-                    os.unlink(targetpath)
                 os.symlink(tarinfo.linkname, targetpath)
             else:
                 # See extract().
