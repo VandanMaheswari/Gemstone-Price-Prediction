@@ -36,7 +36,7 @@ class DataIngestion:
         
         try :
             # df = pd.read_csv("notebooks/data","gemstone.csv")
-            df = pd.read_csv("notebooks/data/gemstone.csv")
+            df = pd.read_csv(r"F:\study material\Data Science\lecture material\50.9th-april\Gemstone-price-prediction\notebooks\data\gemstone.csv")
             logging.info("dataset read as pandas dataframe")
             
             
@@ -57,8 +57,8 @@ class DataIngestion:
             logging.info("test test split")
             train_set,test_set = train_test_split(df,test_size=0.30,random_state=42)
             
-            train_set.to_csv(self.ingesion_config.train_data_path,index = False ,Header = True)
-            test_set.to_csv(self.ingesion_config.test_data_path,index = False ,Header = True)
+            train_set.to_csv(self.ingesion_config.train_data_path,index = False)
+            test_set.to_csv(self.ingesion_config.test_data_path,index = False)
             # i am not again pass command of madirs because it is already created so i just have to pass the Train_data_path or
             # test_data_path and it will automatically go and save my files inside artifacts folder as it is already created above
             # while saving raw data
