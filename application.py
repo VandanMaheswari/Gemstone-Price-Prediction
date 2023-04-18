@@ -19,7 +19,8 @@ def predict_datapoint():
     if request.method=='GET':
         return render_template('form.html')
     
-    
+    # when we call predict_datapoint from form then it is get method and that time it call form.html and as we press submit it
+    # goes in the else section and then intializing the all variables here
     
     else :
         
